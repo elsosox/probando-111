@@ -1,0 +1,33 @@
+<!-- public/index.html actualizado -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Juego de Física Avanzado</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="background">
+    <div class="container">
+      <header>
+        <img src="https://cdn-icons-png.flaticon.com/512/2942/2942885.png" alt="Física" class="logo" />
+        <h1>🔬 Juego de Física Interactivo</h1>
+        <p class="subtitle">Desafía tu conocimiento en tiempo real</p>
+      </header>
+
+      <div class="input-section">
+        <input type="text" id="grado" placeholder="Ingresa el grado (ej. 5to Secundaria)" />
+        <input type="text" id="tema" placeholder="Ingresa el tema (ej. Leyes de Newton)" />
+        <button class="start-btn" onclick="generarPreguntas()">🚀 Comenzar</button>
+      </div>
+
+      <div id="resultado"></div>
+      <button class="back-btn" onclick="volverInicio()">🔙 Volver al inicio</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
