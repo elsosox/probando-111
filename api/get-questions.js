@@ -16,7 +16,7 @@ export default async function handler(req, res) {
   const prompt = `
 Eres un profesor de física. Crea 20 preguntas numéricas de opción múltiple para estudiantes de ${grado}, sobre el tema "${tema}".
 Cada pregunta debe ser un problema con números reales. Incluye 4 opciones (A-D), indicando cuál es correcta (por índice), y una solución con el procedimiento paso a paso y fórmula usada.
-Devuelve las preguntas en formato JSON con esta estructura:
+Devuelve las preguntas en formato JSON, sin explicaciones adicionales, con esta estructura:
 [
   {
     "question": "Un coche acelera desde el reposo a 4 m/s² durante 3 segundos. ¿Qué velocidad final alcanza?",
@@ -34,25 +34,46 @@ Devuelve las preguntas en formato JSON con esta estructura:
       temperature: 0.7
     });
 
-    const text = completion.choices[0].message.content?.trim();
+    let content = completion.choices[0]?.message?.content?.trim();
 
-    if (!text) return res.status(500).json({ error: 'Respuesta vacía de OpenAI' });
+    if (!content) {
+      return res.status(500).json({ error: 'Respuesta vacía de OpenAI' });
+    }
+
+    // 🔍 Extraer solo la parte JSON si OpenAI incluye texto antes o después
+    const start = content.indexOf('[');
+    const end = content.lastIndexOf(']');
+    if (start === -1 || end === -1) {
+      return res.status(500).json({ error: 'No se encontró un arreglo JSON válido en la respuesta de OpenAI' });
+    }
+
+    const jsonStr = content.substring(start, end + 1);
 
     let questions;
     try {
-      questions = JSON.parse(text);
-    } catch (e) {
-      console.error("❌ Error al convertir JSON:", e);
-      return res.status(500).json({ error: 'Formato JSON inválido desde OpenAI.' });
+      questions = JSON.parse(jsonStr);
+    } catch (err) {
+      console.error("❌ Error al parsear JSON:", err.message);
+      return res.status(500).json({ error: 'La respuesta no es un JSON válido' });
     }
 
     if (!Array.isArray(questions)) {
-      return res.status(500).json({ error: 'La respuesta no es un arreglo' });
+      return res.status(500).json({ error: 'El JSON debe ser una lista de preguntas' });
+    }
+
+    // Validación básica de las preguntas
+    const isValid = questions.every(q =>
+      q.question && Array.isArray(q.options) && q.options.length === 4 &&
+      typeof q.correctIndex === 'number' && q.solution
+    );
+
+    if (!isValid) {
+      return res.status(500).json({ error: 'Algunas preguntas no tienen el formato esperado' });
     }
 
     return res.status(200).json({ questions: { questions } });
   } catch (err) {
-    console.error("Error:", err);
+    console.error("❌ Error general:", err);
     return res.status(500).json({ error: 'Error generando preguntas con OpenAI' });
   }
 }
